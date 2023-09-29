@@ -1,4 +1,5 @@
-import {Message, MessageRepository} from "./post-message-use.case.ts";
+import {MessageRepository} from "./message.repository.ts";
+import {Message} from "./message.ts";
 
 export class FileSystemMessageRepository implements MessageRepository{
     save(msg: Message): Promise<void> {

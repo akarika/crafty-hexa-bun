@@ -2,10 +2,11 @@ import {beforeEach, describe, expect, test} from "bun:test";
 import {
     DateProvider,
      MessageEmptyError,
-    MessageRepository, MessageTooLongError,
+    MessageTooLongError,
     PostMessageCommand,
     PostMessageUseCase
 } from "../post-message-use.case.ts";
+import {MessageRepository} from "../message.repository.ts";
 
 //fixture ?
 
