@@ -1,14 +1,9 @@
 #!/usr/bin/env bun
-import { Command } from "commander";
-import {DateProvider, PostMessageCommand, PostMessageUseCase} from "./src/post-message-use.case.ts";
+import {Command} from "commander";
+import {PostMessageCommand, PostMessageUseCase} from "./src/post-message-use.case.ts";
 import {FileSystemMessageRepository} from "./src/message.fs.repository.ts";
+import {RealDateProvider} from "./stub-date-rpovider..ts";
 
-
-class RealDateProvider implements DateProvider {
-    getNow(): Date {
-        return new Date();
-    }
-}
 
 const messageRepository = new FileSystemMessageRepository();
 const dateProvider = new RealDateProvider();
