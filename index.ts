@@ -2,11 +2,11 @@
 import {Command} from "commander";
 import {PostMessageCommand, PostMessageUseCase} from "./src/post-message-use.case.ts";
 import {FileSystemMessageRepository} from "./src/message.fs.repository.ts";
-import {RealDateProvider} from "./stub-date-rpovider..ts";
+import {StubDateProvider} from "./stub-date-provider.ts";
 
 
 const messageRepository = new FileSystemMessageRepository();
-const dateProvider = new RealDateProvider();
+const dateProvider = new StubDateProvider();
 const postMessageUseCase = new PostMessageUseCase(
     messageRepository,
     dateProvider

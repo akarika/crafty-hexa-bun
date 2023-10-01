@@ -4,7 +4,7 @@ import {InMemoryMessageRepository} from "../message.inmemory.repository.ts";
 
 import {Message} from "../message.ts";
 import console from "console";
-import {RealDateProvider} from "../../stub-date-rpovider..ts";
+import {StubDateProvider} from "../../stub-date-provider.ts";
 
 describe('Feature: Viewing a personnal timeline', () => {
     let fixture: Fixture
@@ -110,7 +110,7 @@ const createFixture = () => {
     let message: Message
     let now: Date
     const messageRepository = new InMemoryMessageRepository()
-    const stubDateProvier = new RealDateProvider()
+    const stubDateProvier = new StubDateProvider()
     const viewTimelineUseCase = new ViewTimelineUseCase(messageRepository, stubDateProvier)
     return {
         givenTheFollowinfMessages(messsages: Message[]) {

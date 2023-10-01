@@ -3,9 +3,8 @@ import {MessageRepository} from "./message.repository.ts";
 export type PostMessageCommand = { text: string; author: string; id: string }
 
 export interface DateProvider {
-    getNow(): Date
+    getNow(): Date;
 }
-
 export class MessageTooLongError extends Error {
 }
 export class MessageEmptyError extends Error {
