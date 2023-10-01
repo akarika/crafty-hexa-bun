@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, setSystemTime, test} from "bun:test";
-import {ViewTimelineUseCase} from "./view-timeline.usecase.ts";
+import {ViewTimelineUseCase} from "../view-timeline.usecase.ts";
 import {InMemoryMessageRepository} from "../message.inmemory.repository.ts";
 
 import {Message} from "../message.ts";

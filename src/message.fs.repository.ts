@@ -16,8 +16,9 @@ export class FileSystemMessageRepository implements MessageRepository {
         return Promise.resolve()
     }
 
-    getAllOfUser(user: string): Promise<Message[]> {
-        return Promise.resolve([]);
+    async getAllOfUser(user: string): Promise<Message[]> {
+        const messages = await this.#getMEssages()
+        return messages.filter((m) => m.author === user)
     }
 
     async #getMEssages(): Promise<Message[]> {
