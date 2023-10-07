@@ -1,13 +1,10 @@
 import {MessageRepository} from "./message.repository.ts";
+import {MessageEmptyError, MessageText, MessageTooLongError} from "./message.ts";
 
 export type PostMessageCommand = { text: string; author: string; id: string }
 
 export interface DateProvider {
     getNow(): Date;
-}
-export class MessageTooLongError extends Error {
-}
-export class MessageEmptyError extends Error {
 }
 
 export class PostMessageUseCase {
@@ -16,11 +13,10 @@ export class PostMessageUseCase {
     }
 
     async handle(postingMessagesCommand: PostMessageCommand) {
-        if (postingMessagesCommand.text.length > 280) throw new MessageTooLongError()
-        if(postingMessagesCommand.text.trim().length === 0 ) throw new MessageEmptyError()
+        const messageText = MessageText.of(postingMessagesCommand.text)
         await this.messageRepository.save({
             id: postingMessagesCommand.id,
-            text: postingMessagesCommand.text,
+            text: messageText,
             author: postingMessagesCommand.author,
             publishedAt: this.dateProvider.getNow()
         })

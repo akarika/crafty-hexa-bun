@@ -1,118 +1,77 @@
-import {beforeEach, describe, expect, test} from "bun:test";
+import {beforeEach, describe,  test} from "bun:test";
 import {
-    DateProvider,
-     MessageEmptyError,
+    MessageEmptyError,
     MessageTooLongError,
-    PostMessageCommand,
-    PostMessageUseCase
 } from "../post-message-use.case.ts";
-import {MessageRepository} from "../message.repository.ts";
+import { createMessagingFixture, MessagingFixture} from "./messaging.fixture.ts";
+import {messageBuilder} from "./message-builder.ts";
 
 //fixture ?
 
 describe("Feature: Posting a message", () => {
-    let fixture : Fixture
-    beforeEach(()=>{
-        fixture = createFixture()
-    })
-    describe("Rule: A message can contain a max of 280 char", () => {
-        test("Alice can post e message on her timeline", async () => {
-            fixture.givenNowIs(new Date('2023-01-19T19:00:00.000Z'))
+    let fixture: MessagingFixture;
 
-           await fixture.whenUperPostMessage({
-                id: "message-id",
-                text: "Hello World",
-                author: "Alice"
-            })
-            fixture.thenPostedMessageShouldBe({
-                id: "message-id",
-                text: "Hello World",
-                author: "Alice",
-                publishedAt: new Date('2023-01-19T19:00:00.000Z')
-            })
-        });
-        test("Alice cannot post a message with more 2023 char", async () => {
-            const textWithLengthOf281 = "Nam quis nulla. Integer malesuada. In in enim a arcu imperdiet malesuada. Sed vel lectus. Donec odio urna, tempus molestie, porttitor ut, iaculis quis, sem. Phasellus rhoncus. Aenean id metus id velit ullamcorper pulvinar. Vestibulum fermentum tortor id mi. Pellentesque ipsum. Nul"
-
-            fixture.givenNowIs(new Date('2023-01-19T19:00:00.000Z'))
-            await fixture.whenUperPostMessage({
-                id: "message-id",
-                text: textWithLengthOf281,
-                author: "Alice"
-            })
-
-            fixture.thenErrorShouldBe(MessageTooLongError)
-
-
-        })
+    beforeEach(() => {
+        fixture = createMessagingFixture();
     });
-    describe("cannot be empty", () => {
-        test("Alice cannot post a message with empty test", async () => {
 
-            fixture.givenNowIs(new Date('2023-01-19T19:00:00.000Z'))
-           await fixture.whenUperPostMessage({
+    describe("Rule: A message can contain a maximum of 280 characters", () => {
+        test("Alice can post a message on her timeline", async () => {
+            fixture.givenNowIs(new Date("2023-01-19T19:00:00.000Z"));
+
+            await fixture.whenUserPostsAmessage({
                 id: "message-id",
-                text: "   ",
-                author: "Alice"
-            })
-            fixture.thenErrorShouldBe(MessageEmptyError)
-        })
-        test("Alice cannot post a message with only whitespaces", async () => {
+                text: "Hello World 2",
+                author: "Alice",
+            });
 
-            fixture.givenNowIs(new Date('2023-01-19T19:00:00.000Z'))
-            await fixture.whenUperPostMessage({
+            fixture.thenMessageShouldBe(
+                messageBuilder()
+                    .withId("message-id")
+                    .authoredBy("Alice")
+                    .withText("Hello World 2")
+                    .publishedAt(new Date("2023-01-19T19:00:00.000Z"))
+                    .build()
+            );
+        });
+
+        test("Alice cannot post a message with more than 280 characters", async () => {
+            const textWithLengthOf281 =
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras mauris lacus, fringilla eu est vitae, varius viverra nisl. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vivamus suscipit feugiat sollicitudin. Aliquam erat volutpat amet.";
+            fixture.givenNowIs(new Date("2023-01-19T19:00:00.000Z"));
+
+            await fixture.whenUserPostsAmessage({
                 id: "message-id",
-                text: "   ",
-                author: "Alice"
-            })
-            fixture.thenErrorShouldBe(MessageEmptyError)
-        })
-    })
-})
+                author: "Alice",
+                text: textWithLengthOf281,
+            });
 
-type Message = { id: string, author: string, text: string, publishedAt: Date }
+            fixture.thenErrorShouldBe(MessageTooLongError);
+        });
+    });
 
+    describe("Rule: A message cannot be empty", () => {
+        test("Alice cannot post an empty message", async () => {
+            fixture.givenNowIs(new Date("2023-01-19T19:00:00.000Z"));
 
-class InMemoryMessageRepository implements MessageRepository {
-    message: Message
+            await fixture.whenUserPostsAmessage({
+                id: "message-id",
+                author: "Alice",
+                text: "",
+            });
 
-    save(msg: Message): Promise<void> {
-        this.message = msg
-        return Promise.resolve()
-    }
+            fixture.thenErrorShouldBe(MessageEmptyError);
+        });
+        test("Alice cannot post an message with only whitespaces", async () => {
+            fixture.givenNowIs(new Date("2023-01-19T19:00:00.000Z"));
 
-}
+            await fixture.whenUserPostsAmessage({
+                id: "message-id",
+                author: "Alice",
+                text: "    ",
+            });
 
-class StubDateProvider implements DateProvider {
-    now: Date
-
-    getNow(): Date {
-        return this.now;
-    }
-}
-
-const createFixture = () => {
-    let message: Message
-    let now: Date
-    const messageRepository = new InMemoryMessageRepository()
-    const dateProvider = new StubDateProvider()
-    const postMessageUsecase = new PostMessageUseCase(messageRepository, dateProvider)
-    let thrownError: Error
-    return {
-        givenNowIs(now: Date) {
-            dateProvider.now = now
-        },
-        async whenUperPostMessage(postingMessagesCommand: PostMessageCommand) {
-            try {
-                await postMessageUsecase.handle(postingMessagesCommand)
-            } catch (err) {
-                thrownError = err
-            }
-        }, thenPostedMessageShouldBe(expectdMessage: { text: string; publishedAt: Date; author: string; id: string }) {
-            expect(expectdMessage).toEqual(messageRepository.message)
-        }, thenErrorShouldBe(expectedErrorClass: new () => Error) {
-            expect(thrownError).toBeInstanceOf(expectedErrorClass)
-        }
-    }
-}
-type Fixture = ReturnType<typeof createFixture>
+            fixture.thenErrorShouldBe(MessageEmptyError);
+        });
+    });
+});
