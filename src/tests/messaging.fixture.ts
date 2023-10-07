@@ -1,13 +1,15 @@
 // dsl domaine spceficique language
 // simplie écrituer test car éutilise les mêmem étapes de test
-
-import {StubDateProvider} from "../../stub-date-provider.ts";
-import {InMemoryMessageRepository} from "../message.inmemory.repository.ts";
-import {PostMessageCommand, PostMessageUseCase} from "../post-message-use.case.ts";
-import {Message} from "../message.ts";
+import {
+    EditMessageCommand,
+        EditMessageUseCase,
+} from "../application/usecases/edit-message.usecase.ts";
+import {StubDateProvider} from "../infra/stub-date-provider.ts";
+import {InMemoryMessageRepository} from "../infra/message.inmemory.repository.ts";
+import {PostMessageCommand, PostMessageUseCase} from "../application/usecases/post-message-use.case.ts";
+import {Message} from "../domaine/message.ts";
 import {expect} from "bun:test";
-import {ViewTimelineUseCase} from "../view-timeline.usecase.ts";
-
+import {ViewTimelineUseCase} from "../application/usecases/view-timeline.usecase.ts";
 
 
 export const createMessagingFixture = () => {
@@ -27,6 +29,11 @@ export const createMessagingFixture = () => {
         messageRepository,
         dateProvider
     );
+    const postMessageUseCase = new PostMessageUseCase(
+        messageRepository,
+        dateProvider
+    );
+    const editMessageUseCase = new EditMessageUseCase(messageRepository);
     return {
         givenTheFollowingMessagesExist(messages: Message[]) {
             messageRepository.givenExistingMessages(messages);
@@ -41,18 +48,32 @@ export const createMessagingFixture = () => {
                 thrownError = err;
             }
         },
+        async whenUserEditsMessage(editMessageCommand: EditMessageCommand) {
+            try {
+                await editMessageUseCase.handle(editMessageCommand);
+            } catch (err) {
+                thrownError = err;
+            }
+        },
         async whenUserSeesTheTimelineOf(user: string) {
-            timeline = await viewTimelineUseCase.handle({ user });
+            timeline = await viewTimelineUseCase.handle({user});
+        },
+        async thenMessageShouldBe(expectedMessage: Message) {
+            const message = await messageRepository.getById(expectedMessage.id);
+            expect(message).toEqual(expectedMessage);
         },
         async whenUserEditsMessage(editMessageCommand: {
             messageId: string;
             text: string;
-        }) {},
+        }) {
+        },
+
         thenMessageShouldBe(expectedMessage: Message) {
             expect(expectedMessage).toEqual(
                 messageRepository.getMessageById(expectedMessage.id)
             );
         },
+
         thenErrorShouldBe(expectedErrorClass: new () => Error) {
             expect(thrownError).toBeInstanceOf(expectedErrorClass);
         },

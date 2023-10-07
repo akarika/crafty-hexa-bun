@@ -1,12 +1,13 @@
-import {MessageRepository} from "./message.repository.ts";
-import {MessageEmptyError, MessageText, MessageTooLongError} from "./message.ts";
+import {MessageRepository} from "../message.repository.ts";
+import {MessageText} from "../../domaine/message.ts";
 
 export type PostMessageCommand = { text: string; author: string; id: string }
 
 export interface DateProvider {
     getNow(): Date;
 }
-
+export class MessageTooLongError extends Error {}
+export class EmptyMessageError extends Error {}
 export class PostMessageUseCase {
 
     constructor(private readonly messageRepository: MessageRepository, private readonly dateProvider: DateProvider) {

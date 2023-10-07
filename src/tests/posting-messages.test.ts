@@ -2,7 +2,7 @@ import {beforeEach, describe,  test} from "bun:test";
 import {
     MessageEmptyError,
     MessageTooLongError,
-} from "../post-message-use.case.ts";
+} from "../application/usecases/post-message-use.case.ts";
 import { createMessagingFixture, MessagingFixture} from "./messaging.fixture.ts";
 import {messageBuilder} from "./message-builder.ts";
 
@@ -25,7 +25,7 @@ describe("Feature: Posting a message", () => {
                 author: "Alice",
             });
 
-            fixture.thenMessageShouldBe(
+            await fixture.thenMessageShouldBe(
                 messageBuilder()
                     .withId("message-id")
                     .authoredBy("Alice")

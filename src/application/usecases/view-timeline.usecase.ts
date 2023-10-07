@@ -1,4 +1,4 @@
-import {MessageRepository} from "./message.repository.ts";
+import {MessageRepository} from "../message.repository.ts";
 import console from "console";
 import {DateProvider} from "./post-message-use.case.ts";
 const ONE_MINUTE_IN_MS = 60000

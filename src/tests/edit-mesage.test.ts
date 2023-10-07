@@ -2,6 +2,7 @@ import {beforeEach, describe, test} from "bun:test";
 
 import { createMessagingFixture, MessagingFixture } from "./messaging.fixture";
 import {messageBuilder} from "./message-builder.ts";
+import {MessageTooLongError} from "../domaine/message.ts";
 
 
 describe("Feature: editing a message", () => {
@@ -24,9 +25,61 @@ describe("Feature: editing a message", () => {
                 text: "Hello World",
             });
 
-            fixture.thenMessageShouldBe(
+            await fixture.thenMessageShouldBe(
                 aliceMessageBuilder.withText("Hello World").build()
             );
+        });
+        test("Alice cannot edit her message to a text superior to 280 characters", async () => {
+            const textWithLengthOf281 =
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras mauris lacus, fringilla eu est vitae, varius viverra nisl. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vivamus suscipit feugiat sollicitudin. Aliquam erat volutpat amet.";
+            const originalAliceMessage = messageBuilder()
+                .withId("message-id")
+                .authoredBy("Alice")
+                .withText("Hello World")
+                .build();
+            fixture.givenTheFollowingMessagesExist([originalAliceMessage]);
+
+            await fixture.whenUserEditsMessage({
+                messageId: "message-id",
+                text: textWithLengthOf281,
+            });
+
+            await fixture.thenMessageShouldBe(originalAliceMessage);
+            fixture.thenErrorShouldBe(MessageTooLongError);
+        });
+
+        test("Alice cannot edit her message to an empty text", async () => {
+            const originalAliceMessage = messageBuilder()
+                .withId("message-id")
+                .authoredBy("Alice")
+                .withText("Hello World")
+                .build();
+            fixture.givenTheFollowingMessagesExist([originalAliceMessage]);
+
+            await fixture.whenUserEditsMessage({
+                messageId: "message-id",
+                text: "",
+            });
+
+            await fixture.thenMessageShouldBe(originalAliceMessage);
+            fixture.thenErrorShouldBe(EmptyMessageError);
+        });
+
+        test("Alice cannot edit her message to an empty text", async () => {
+            const originalAliceMessage = messageBuilder()
+                .withId("message-id")
+                .authoredBy("Alice")
+                .withText("Hello World")
+                .build();
+            fixture.givenTheFollowingMessagesExist([originalAliceMessage]);
+
+            await fixture.whenUserEditsMessage({
+                messageId: "message-id",
+                text: "   ",
+            });
+
+            await fixture.thenMessageShouldBe(originalAliceMessage);
+            fixture.thenErrorShouldBe(EmptyMessageError);
         });
     });
 });

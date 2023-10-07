@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 import {Command} from "commander";
-import {PostMessageCommand, PostMessageUseCase} from "./src/post-message-use.case.ts";
-import {FileSystemMessageRepository} from "./src/message.fs.repository.ts";
-import {StubDateProvider} from "./stub-date-provider.ts";
+import {PostMessageCommand, PostMessageUseCase} from "./src/application/usecases/post-message-use.case.ts";
+import {FileSystemMessageRepository} from "./src/infra/message.fs.repository.ts";
+import {StubDateProvider} from "./src/infra/stub-date-provider.ts";
 import {v4 as uuidv4} from "uuid";
-import {ViewTimelineUseCase} from "./src/view-timeline.usecase.ts";
-
+import {ViewTimelineUseCase} from "./src/application/usecases/view-timeline.usecase.ts";
+import {EditMessageCommand, EditMessageUseCase} from "./src/application/usecases/edit-message.usecase.ts";
 const messageRepository = new FileSystemMessageRepository();
 const dateProvider = new StubDateProvider();
 const postMessageUseCase = new PostMessageUseCase(
@@ -15,6 +15,8 @@ const postMessageUseCase = new PostMessageUseCase(
 const viewTimelineUseCase = new ViewTimelineUseCase(
     messageRepository,
     dateProvider)
+const editMessageUseCase = new EditMessageUseCase(messageRepository);
+
 const program = new Command();
 program
     .version("1.0.0")
@@ -37,7 +39,25 @@ program
                     console.error("❌", err);
                     process.exit(1);
                 }
-            })).addCommand(
+            }))  .addCommand(
+    new Command("edit")
+        .argument("<message-id>", "the message id of the message to edit")
+        .argument("<message>", "the new text")
+        .action(async (messageId, message) => {
+            const editMessageCommand: EditMessageCommand = {
+                messageId,
+                text: message,
+            };
+            try {
+                await editMessageUseCase.handle(editMessageCommand);
+                console.log("✅ Message edité");
+                process.exit(0);
+            } catch (err) {
+                console.error("❌", err);
+                process.exit(1);
+            }
+        })
+).addCommand(
     new Command("view")
         .argument("<user>", "the user to view the timeline of")
         .action(async (user) => {
